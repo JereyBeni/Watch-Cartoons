@@ -37,7 +37,9 @@ class WatchCartoonsApp(tk.Tk):
 
         ttk.Label(top, text="API Key:").pack(side=tk.LEFT)
         self.api_key_var = tk.StringVar()
-        self.api_entry = ttk.Entry(top, textvariable=self.api_key_var, width=50, show="*")
+        self.api_entry = ttk.Entry(
+            top, textvariable=self.api_key_var, width=50, show="*"
+        )
         self.api_entry.pack(side=tk.LEFT, padx=(4, 8), fill=tk.X, expand=True)
         ttk.Button(top, text="Set Key", command=self._set_api_key).pack(side=tk.LEFT)
 
@@ -93,9 +95,9 @@ class WatchCartoonsApp(tk.Tk):
         self.detail.pack(fill=tk.BOTH, expand=True)
 
         self.status_var = tk.StringVar(value="Ready")
-        ttk.Label(self, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W).pack(
-            fill=tk.X, side=tk.BOTTOM
-        )
+        ttk.Label(
+            self, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W
+        ).pack(fill=tk.X, side=tk.BOTTOM)
 
         action_bar = ttk.Frame(self, padding=(8, 4))
         action_bar.pack(fill=tk.X, side=tk.BOTTOM)
@@ -307,9 +309,7 @@ class WatchCartoonsApp(tk.Tk):
                 self.after(0, lambda: self._display_video_details(details))
             except ClientError as exc:
                 msg = str(exc)
-                self.after(
-                    0, lambda m=msg: messagebox.showerror("Video Error", m)
-                )
+                self.after(0, lambda m=msg: messagebox.showerror("Video Error", m))
                 self.after(0, lambda: self.status_var.set("Failed to load video"))
 
         threading.Thread(target=worker, daemon=True).start()
