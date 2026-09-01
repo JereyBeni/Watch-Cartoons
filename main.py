@@ -188,8 +188,7 @@ class YouTube2005Player(tk.Frame):
             self._playing = True
             self.play_btn.configure(text="❚❚ Pause")
             self.stage_label.configure(
-                text=f"▶ Now playing\n\n{self._title[:50]}\n\n"
-                "(opens in your browser)",
+                text=f"▶ Now playing\n\n{self._title[:50]}\n\n(opens in your browser)",
                 fg="#cc3333",
             )
             self.progress["value"] = 15
