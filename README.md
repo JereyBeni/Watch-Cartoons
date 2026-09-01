@@ -2,12 +2,16 @@
 
 Desktop GUI application for discovering cartoon videos and playlists using the **YouTube Data API v3**.
 
+Styled after a **Windows XP compatibility layer** with a retro **2005-era YouTube player** panel.
+
 ## Features
 
-- Search for cartoon videos
-- Search for playlists and load their items
+- Search for cartoon videos and playlists
+- Load playlist items
 - View video details (title, channel, duration, views, likes, description)
-- Simple, lightweight GUI built with **tkinter**
+- **Windows XP–inspired dark UI** (blue title bar, dark panels, Tahoma fonts)
+- **2005 YouTube-style player** chrome (silver bezel, classic controls, progress bar)
+- Open selected videos in the system browser from the player
 - Configurable API key (environment variable or in-app entry)
 - Automated Windows `.exe` build on every GitHub Actions run
 
@@ -52,11 +56,11 @@ python main.py
 
 1. Enter (or load) your YouTube Data API key.
 2. Type a search query (e.g. `Tom and Jerry`).
-3. Choose **Videos** or **Playlists**.
-4. Click **Search**.
-5. Select a result to preview details.
-6. Double-click a playlist (or use **Open Playlist Items**) to load its videos.
-7. Use **Video Details** for full statistics on a selected video.
+3. Choose **Videos** or **Playlists** and click **Search**.
+4. Select a result to preview details in the lower pane.
+5. Double-click a video (or click **Load in Player**) to send it to the 2005-style player.
+6. Press **▶ Play** or **Open in Browser** to watch it.
+7. Double-click a playlist (or use **Open Playlist Items**) to expand its videos.
 
 ## Windows Executable
 
@@ -87,7 +91,7 @@ The binary appears at `dist/Watch-Cartoons.exe`.
 ├── .github/
 │   └── workflows/
 │       └── build.yml      # CI validation + Windows .exe build
-├── main.py                # GUI application
+├── main.py                # XP-style GUI + 2005 YouTube player
 ├── youtube_client.py      # YouTube Data API wrapper (videos + playlists)
 ├── requirements.txt
 ├── .env.example
