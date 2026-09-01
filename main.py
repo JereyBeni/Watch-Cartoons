@@ -12,6 +12,9 @@ from dotenv import load_dotenv
 
 from youtube_client import YouTubeClient
 
+# Exceptions raised by YouTubeClient
+ClientError = (ValueError, RuntimeError)
+
 
 class WatchCartoonsApp(tk.Tk):
     def __init__(self) -> None:
@@ -111,7 +114,7 @@ class WatchCartoonsApp(tk.Tk):
             try:
                 self.client = YouTubeClient(api_key=key)
                 self.status_var.set("API key loaded from environment")
-            except Exception as exc:
+            except ClientError as exc:
                 self.status_var.set(f"Failed to init client: {exc}")
 
     def _set_api_key(self) -> None:
@@ -122,7 +125,7 @@ class WatchCartoonsApp(tk.Tk):
         try:
             self.client = YouTubeClient(api_key=key)
             self.status_var.set("API key set successfully")
-        except Exception as exc:
+        except ClientError as exc:
             messagebox.showerror("API Key", str(exc))
 
     def _ensure_client(self) -> bool:
@@ -156,8 +159,9 @@ class WatchCartoonsApp(tk.Tk):
                 else:
                     results = self.client.search_videos(query)
                 self.after(0, lambda: self._populate_results(results, mode))
-            except Exception as exc:
-                self.after(0, lambda: self._search_failed(str(exc)))
+            except ClientError as exc:
+                msg = str(exc)
+                self.after(0, lambda m=msg: self._search_failed(m))
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -231,10 +235,10 @@ class WatchCartoonsApp(tk.Tk):
         item = self._current_results[idx]
         playlist_id = item.get("id", {}).get("playlistId")
         if not playlist_id:
-            # Maybe the user selected a video result
             messagebox.showinfo(
                 "Playlist",
-                "Selected item is not a playlist. Switch to Playlists mode and search again.",
+                "Selected item is not a playlist. "
+                "Switch to Playlists mode and search again.",
             )
             return
 
@@ -245,10 +249,11 @@ class WatchCartoonsApp(tk.Tk):
                 assert self.client is not None
                 items = self.client.get_playlist_items(playlist_id)
                 self.after(0, lambda: self._show_playlist_items(items, playlist_id))
-            except Exception as exc:
+            except ClientError as exc:
+                msg = str(exc)
                 self.after(
                     0,
-                    lambda: messagebox.showerror("Playlist Error", str(exc)),
+                    lambda m=msg: messagebox.showerror("Playlist Error", m),
                 )
                 self.after(0, lambda: self.status_var.set("Failed to load playlist"))
 
@@ -259,7 +264,6 @@ class WatchCartoonsApp(tk.Tk):
     ) -> None:
         self._clear_results()
         self._mode.set("videos")
-        # Convert playlist items into a displayable list similar to search results
         converted: list[dict[str, Any]] = []
         for it in items:
             snippet = it.get("snippet", {})
@@ -278,9 +282,7 @@ class WatchCartoonsApp(tk.Tk):
                 }
             )
         self._populate_results(converted, "videos")
-        self.status_var.set(
-            f"Playlist {playlist_id}: {len(converted)} video(s)"
-        )
+        self.status_var.set(f"Playlist {playlist_id}: {len(converted)} video(s)")
 
     def _show_video_details(self) -> None:
         if not self._ensure_client():
@@ -303,9 +305,10 @@ class WatchCartoonsApp(tk.Tk):
                 assert self.client is not None
                 details = self.client.get_video_details(video_id)
                 self.after(0, lambda: self._display_video_details(details))
-            except Exception as exc:
+            except ClientError as exc:
+                msg = str(exc)
                 self.after(
-                    0, lambda: messagebox.showerror("Video Error", str(exc))
+                    0, lambda m=msg: messagebox.showerror("Video Error", m)
                 )
                 self.after(0, lambda: self.status_var.set("Failed to load video"))
 
