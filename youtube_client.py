@@ -1,4 +1,4 @@
-"""YouTube Data API v3 client for cartoon-related video discovery."""
+"""YouTube Data API v3 client for cartoon-related video and playlist discovery."""
 
 from __future__ import annotations
 
@@ -21,31 +21,21 @@ class YouTubeClient:
             )
         self.youtube = build("youtube", "v3", developerKey=self.api_key)
 
-    def search(
+    def search_videos(
         self,
         query: str,
-        max_results: int = 10,
+        max_results: int = 15,
         channel_id: str | None = None,
         order: str = "relevance",
     ) -> list[dict[str, Any]]:
-        """Search for videos matching the query.
-
-        Args:
-            query: Search terms (e.g. cartoon title).
-            max_results: Maximum number of results to return (1-50).
-            channel_id: Optional channel ID to restrict the search.
-            order: Sort order (relevance, date, viewCount, rating, title).
-
-        Returns:
-            List of video result dictionaries.
-        """
+        """Search for videos matching the query."""
         request_params: dict[str, Any] = {
             "part": "snippet",
             "q": query,
             "type": "video",
             "maxResults": min(max(max_results, 1), 50),
             "order": order,
-            "videoCategoryId": "1",  # Film & Animation (helps focus on cartoons)
+            "videoCategoryId": "1",  # Film & Animation
         }
         if channel_id:
             request_params["channelId"] = channel_id
@@ -54,7 +44,62 @@ class YouTubeClient:
             response = self.youtube.search().list(**request_params).execute()
             return response.get("items", [])
         except HttpError as exc:
-            raise RuntimeError(f"YouTube API search failed: {exc}") from exc
+            raise RuntimeError(f"YouTube API video search failed: {exc}") from exc
+
+    def search_playlists(
+        self,
+        query: str,
+        max_results: int = 15,
+        channel_id: str | None = None,
+        order: str = "relevance",
+    ) -> list[dict[str, Any]]:
+        """Search for playlists matching the query."""
+        request_params: dict[str, Any] = {
+            "part": "snippet",
+            "q": query,
+            "type": "playlist",
+            "maxResults": min(max(max_results, 1), 50),
+            "order": order,
+        }
+        if channel_id:
+            request_params["channelId"] = channel_id
+
+        try:
+            response = self.youtube.search().list(**request_params).execute()
+            return response.get("items", [])
+        except HttpError as exc:
+            raise RuntimeError(f"YouTube API playlist search failed: {exc}") from exc
+
+    def get_playlist_items(
+        self, playlist_id: str, max_results: int = 50
+    ) -> list[dict[str, Any]]:
+        """Fetch videos contained in a playlist."""
+        try:
+            response = (
+                self.youtube.playlistItems()
+                .list(
+                    part="snippet,contentDetails",
+                    playlistId=playlist_id,
+                    maxResults=min(max(max_results, 1), 50),
+                )
+                .execute()
+            )
+            return response.get("items", [])
+        except HttpError as exc:
+            raise RuntimeError(f"YouTube API playlist items failed: {exc}") from exc
+
+    def get_playlist_details(self, playlist_id: str) -> dict[str, Any] | None:
+        """Retrieve details for a single playlist."""
+        try:
+            response = (
+                self.youtube.playlists()
+                .list(part="snippet,contentDetails", id=playlist_id)
+                .execute()
+            )
+            items = response.get("items", [])
+            return items[0] if items else None
+        except HttpError as exc:
+            raise RuntimeError(f"YouTube API playlist lookup failed: {exc}") from exc
 
     def get_video_details(self, video_id: str) -> dict[str, Any] | None:
         """Retrieve detailed information for a single video."""
@@ -74,7 +119,6 @@ class YouTubeClient:
     ) -> list[dict[str, Any]]:
         """List recent videos uploaded by a channel."""
         try:
-            # First resolve the uploads playlist
             channels = (
                 self.youtube.channels()
                 .list(part="contentDetails", id=channel_id)
@@ -85,16 +129,6 @@ class YouTubeClient:
                 return []
 
             uploads_playlist = items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
-
-            playlist_items = (
-                self.youtube.playlistItems()
-                .list(
-                    part="snippet",
-                    playlistId=uploads_playlist,
-                    maxResults=min(max(max_results, 1), 50),
-                )
-                .execute()
-            )
-            return playlist_items.get("items", [])
+            return self.get_playlist_items(uploads_playlist, max_results=max_results)
         except HttpError as exc:
             raise RuntimeError(f"YouTube API channel lookup failed: {exc}") from exc
