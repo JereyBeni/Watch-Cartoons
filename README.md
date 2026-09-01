@@ -2,7 +2,7 @@
 
 Desktop GUI application for discovering cartoon videos and playlists using the **YouTube Data API v3**.
 
-Styled after a **Windows XP compatibility layer** with a retro **2005-era YouTube player** panel.
+Styled after a **Windows XP compatibility layer** with a retro **2005-era YouTube player** (desktop chrome + local web shell).
 
 ## Features
 
@@ -10,8 +10,8 @@ Styled after a **Windows XP compatibility layer** with a retro **2005-era YouTub
 - Load playlist items
 - View video details (title, channel, duration, views, likes, description)
 - **Windows XP–inspired dark UI** (blue title bar, dark panels, Tahoma fonts)
-- **2005 YouTube-style player** chrome (silver bezel, classic controls, progress bar)
-- Open selected videos in the system browser from the player
+- **2005 YouTube-style desktop player** chrome
+- **Local web player** (`web/index.html` + `player.js`) that mimics the old watch page and embeds the modern YouTube player under a retro skin
 - Configurable API key (environment variable or in-app entry)
 - Automated Windows `.exe` build on every GitHub Actions run
 
@@ -19,6 +19,7 @@ Styled after a **Windows XP compatibility layer** with a retro **2005-era YouTub
 
 - Python 3.10+
 - A valid YouTube Data API v3 key ([Google Cloud Console](https://console.cloud.google.com/))
+- A modern browser (for the web player)
 
 ## Installation
 
@@ -55,57 +56,53 @@ python main.py
 ```
 
 1. Enter (or load) your YouTube Data API key.
-2. Type a search query (e.g. `Tom and Jerry`).
-3. Choose **Videos** or **Playlists** and click **Search**.
-4. Select a result to preview details in the lower pane.
-5. Double-click a video (or click **Load in Player**) to send it to the 2005-style player.
-6. Press **▶ Play** or **Open in Browser** to watch it.
-7. Double-click a playlist (or use **Open Playlist Items**) to expand its videos.
+2. Search for videos or playlists.
+3. Select a video → **Load in Player** (or double-click).
+4. Press **▶ Play** or **Web Player** / **Open Web Player** to open `web/index.html` with that video.
+
+### Web player only
+
+You can open the HTML shell directly in a browser:
+
+```text
+web/index.html?v=VIDEO_ID&title=My+Title&channel=Channel+Name
+```
+
+## About archived old players
+
+Flash-based YouTube players from 2005–2010 (and most Wayback Machine snapshots of them) **no longer run** in current browsers. This project uses:
+
+- A visual homage to the 2005 watch page (`web/index.html`, `style.css`, `player.js`)
+- The modern YouTube iframe embed underneath for actual playback
 
 ## Windows Executable
 
 Every push and pull request to `main` builds a standalone Windows GUI executable with **PyInstaller** (`--windowed`).
 
-After a successful workflow run:
+After a successful workflow run, download the **Watch-Cartoons-Windows** artifact from the Actions tab.
 
-1. Open the repository on GitHub → **Actions**
-2. Select the latest workflow run
-3. Download the artifact **Watch-Cartoons-Windows**
-4. Extract `Watch-Cartoons.exe`
-
-Local build (Windows):
+Local build:
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile --windowed --name Watch-Cartoons main.py
+pyinstaller --onefile --windowed --name Watch-Cartoons --add-data "web;web" main.py
 ```
 
-The binary appears at `dist/Watch-Cartoons.exe`.
-
-> The executable still needs a valid API key (environment variable or entered in the GUI).
+> On Linux/macOS packaging, use `--add-data "web:web"` instead.
 
 ## Project Structure
 
 ```
 .
-├── .github/
-│   └── workflows/
-│       └── build.yml      # CI validation + Windows .exe build
-├── main.py                # XP-style GUI + 2005 YouTube player
-├── youtube_client.py      # YouTube Data API wrapper (videos + playlists)
+├── web/
+│   ├── index.html     # 2005-style watch page
+│   ├── style.css
+│   └── player.js      # embed + controls
+├── main.py            # XP GUI + bridge to web player
+├── youtube_client.py
 ├── requirements.txt
-├── .env.example
-├── .gitignore
-└── README.md
+└── .github/workflows/build.yml
 ```
-
-## Development
-
-The GitHub Actions workflow:
-
-- Lints with ruff
-- Performs syntax and import checks
-- Builds a windowed Windows `.exe` and uploads it as an artifact
 
 ## License
 

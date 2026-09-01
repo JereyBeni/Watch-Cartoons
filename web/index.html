@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube - Broadcast Yourself</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- 2005-era YouTube shell -->
+  <div id="yt-page">
+    <div id="yt-header">
+      <div id="logo">
+        <span class="logo-you">You</span><span class="logo-tube">Tube</span>
+        <span class="tagline">Broadcast Yourself™</span>
+      </div>
+      <div id="header-links">
+        <a href="#">Home</a> |
+        <a href="#">Videos</a> |
+        <a href="#">Channels</a> |
+        <a href="#">Community</a>
+      </div>
+    </div>
+
+    <div id="main">
+      <div id="player-column">
+        <div id="video-title">Loading…</div>
+
+        <div id="player-chrome">
+          <div id="stage">
+            <div id="embed-wrap">
+              <!-- YouTube iframe injected by player.js -->
+            </div>
+            <div id="stage-placeholder">
+              <div class="big-play">▶</div>
+              <p>Select a video from Watch-Cartoons</p>
+            </div>
+          </div>
+
+          <div id="controls">
+            <button id="btn-play" type="button" title="Play">▶</button>
+            <div id="progress-track">
+              <div id="progress-fill"></div>
+            </div>
+            <span id="time-display">0:00 / 0:00</span>
+            <button id="btn-mute" type="button" title="Mute">🔊</button>
+            <button id="btn-fs" type="button" title="Fullscreen">⛶</button>
+          </div>
+        </div>
+
+        <div id="video-meta">
+          <div id="views">— views</div>
+          <div id="rating">
+            <span class="stars">★★★★☆</span>
+            <span id="rating-count">Rate this video</span>
+          </div>
+        </div>
+
+        <div id="description-box">
+          <div id="channel-line">
+            <strong id="channel-name">—</strong>
+            <span id="published">—</span>
+          </div>
+          <div id="description">No description.</div>
+        </div>
+
+        <div id="comments-header">Comments (0)</div>
+        <div id="comments-placeholder">
+          Comments are disabled in this offline player shell.
+        </div>
+      </div>
+
+      <div id="sidebar">
+        <div class="side-box">
+          <h3>Related Videos</h3>
+          <p class="muted">Open another video from the Watch-Cartoons desktop app.</p>
+        </div>
+        <div class="side-box">
+          <h3>About this player</h3>
+          <p class="muted">
+            Visual recreation of the mid-2000s YouTube watch page.
+            Video playback uses the modern YouTube embed under a retro skin.
+            Flash-era players from archives no longer run in current browsers.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="yt-footer">
+      <a href="#">Help</a> |
+      <a href="#">About</a> |
+      <a href="#">Copyright</a> |
+      <a href="#">Terms</a> |
+      <a href="#">Privacy</a>
+      <span class="copy">© 2005–2006 YouTube, LLC (style homage)</span>
+    </div>
+  </div>
+
+  <script src="player.js"></script>
+</body>
+</html>

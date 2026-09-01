@@ -62,7 +62,7 @@ jobs:
 
       - name: Build GUI executable with PyInstaller
         run: |
-          pyinstaller --onefile --windowed --name Watch-Cartoons main.py
+          pyinstaller --onefile --windowed --name Watch-Cartoons --add-data "web;web" main.py
 
       - name: Upload executable artifact
         uses: actions/upload-artifact@v4

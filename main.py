@@ -6,8 +6,10 @@ import os
 import threading
 import tkinter as tk
 import webbrowser
+from pathlib import Path
 from tkinter import messagebox, ttk
 from typing import Any
+from urllib.parse import quote, urlencode
 
 from dotenv import load_dotenv
 
@@ -36,6 +38,37 @@ YT_VIDEO_BG = "#000000"
 YT_RED = "#cc0000"
 YT_TEXT = "#333333"
 
+WEB_DIR = Path(__file__).resolve().parent / "web"
+PLAYER_HTML = WEB_DIR / "index.html"
+
+
+def open_web_player(
+    video_id: str,
+    title: str = "",
+    channel: str = "",
+    published: str = "",
+    description: str = "",
+) -> None:
+    """Open the local 2005-style index.html player with the given video."""
+    if not PLAYER_HTML.is_file():
+        # Fallback to plain YouTube
+        webbrowser.open(f"https://www.youtube.com/watch?v={video_id}")
+        return
+
+    params = {"v": video_id}
+    if title:
+        params["title"] = title
+    if channel:
+        params["channel"] = channel
+    if published:
+        params["published"] = published
+    if description:
+        params["desc"] = description[:500]
+
+    # file:// URL with query string
+    uri = PLAYER_HTML.as_uri() + "?" + urlencode(params, quote_via=quote)
+    webbrowser.open(uri)
+
 
 class YouTube2005Player(tk.Frame):
     """Retro player chrome modelled on the 2005 YouTube Flash player."""
@@ -44,6 +77,9 @@ class YouTube2005Player(tk.Frame):
         super().__init__(master, bg=YT_CHROME, **kwargs)
         self._video_id: str | None = None
         self._title = "No video selected"
+        self._channel = ""
+        self._published = ""
+        self._description = ""
         self._playing = False
 
         # Outer silver bezel
@@ -120,8 +156,8 @@ class YouTube2005Player(tk.Frame):
 
         tk.Button(
             controls,
-            text="Open in Browser",
-            command=self._open_browser,
+            text="Web Player",
+            command=self._open_web_player,
             bg="#e8e8e8",
             fg=YT_TEXT,
             font=("Tahoma", 8),
@@ -162,15 +198,19 @@ class YouTube2005Player(tk.Frame):
         title: str,
         channel: str = "",
         published: str = "",
+        description: str = "",
     ) -> None:
         self._video_id = video_id
         self._title = title
+        self._channel = channel
+        self._published = published
+        self._description = description
         self._playing = False
         self.play_btn.configure(text="▶ Play")
         self.progress["value"] = 0
         self.time_label.configure(text="0:00 / --:--")
         self.stage_label.configure(
-            text=f"▶\n\n{title[:60]}\n\nPress Play to open",
+            text=f"▶\n\n{title[:60]}\n\nPress Play or Web Player",
             fg="#aaaaaa",
         )
         self.info_title.configure(text=title[:80])
@@ -188,11 +228,11 @@ class YouTube2005Player(tk.Frame):
             self._playing = True
             self.play_btn.configure(text="❚❚ Pause")
             self.stage_label.configure(
-                text=f"▶ Now playing\n\n{self._title[:50]}\n\n(opens in your browser)",
+                text=f"▶ Now playing\n\n{self._title[:50]}\n\n(opens web player)",
                 fg="#cc3333",
             )
             self.progress["value"] = 15
-            self._open_browser()
+            self._open_web_player()
         else:
             self._playing = False
             self.play_btn.configure(text="▶ Play")
@@ -201,12 +241,17 @@ class YouTube2005Player(tk.Frame):
                 fg="#aaaaaa",
             )
 
-    def _open_browser(self) -> None:
+    def _open_web_player(self) -> None:
         if not self._video_id:
             messagebox.showinfo("Player", "Select a video first.")
             return
-        url = f"https://www.youtube.com/watch?v={self._video_id}"
-        webbrowser.open(url)
+        open_web_player(
+            video_id=self._video_id,
+            title=self._title,
+            channel=self._channel,
+            published=self._published,
+            description=self._description,
+        )
 
 
 class WatchCartoonsApp(tk.Tk):
@@ -437,6 +482,9 @@ class WatchCartoonsApp(tk.Tk):
         ttk.Button(
             action_bar, text="▶ Load in Player", command=self._load_into_player
         ).pack(side=tk.LEFT, padx=6)
+        ttk.Button(
+            action_bar, text="Open Web Player", command=self._open_selected_web
+        ).pack(side=tk.LEFT, padx=6)
 
         # Status bar (xp-layer style)
         self.status_var = tk.StringVar(value="Ready")
@@ -581,8 +629,30 @@ class WatchCartoonsApp(tk.Tk):
             title=snippet.get("title", "Untitled"),
             channel=snippet.get("channelTitle", ""),
             published=snippet.get("publishedAt", ""),
+            description=snippet.get("description", ""),
         )
         self.status_var.set(f"Loaded into player: {video_id}")
+
+    def _open_selected_web(self) -> None:
+        idx = self._selected_index()
+        if idx is None:
+            # Try whatever is loaded in the side player
+            self.player._open_web_player()
+            return
+        item = self._current_results[idx]
+        video_id = item.get("id", {}).get("videoId")
+        if not video_id:
+            messagebox.showinfo("Web Player", "Select a video first.")
+            return
+        snippet = item.get("snippet", {})
+        open_web_player(
+            video_id=video_id,
+            title=snippet.get("title", ""),
+            channel=snippet.get("channelTitle", ""),
+            published=snippet.get("publishedAt", ""),
+            description=snippet.get("description", ""),
+        )
+        self.status_var.set(f"Opened web player: {video_id}")
 
     def _fetch_playlist_items(self) -> None:
         if not self._ensure_client():
@@ -694,7 +764,6 @@ class WatchCartoonsApp(tk.Tk):
         self._set_detail(text)
         self.status_var.set("Video details loaded")
 
-        # Also push into the retro player
         video_id = details.get("id", "")
         if video_id:
             self.player.load_video(
@@ -702,6 +771,7 @@ class WatchCartoonsApp(tk.Tk):
                 title=snippet.get("title", "Untitled"),
                 channel=snippet.get("channelTitle", ""),
                 published=snippet.get("publishedAt", ""),
+                description=snippet.get("description", ""),
             )
 
     def _set_detail(self, text: str) -> None:
