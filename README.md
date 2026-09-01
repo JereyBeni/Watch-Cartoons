@@ -8,6 +8,7 @@ Python client for discovering and fetching cartoon-related videos using the **Yo
 - Retrieve video details, playlists, and channel information
 - Simple command-line interface
 - Configurable via environment variables
+- Automated Windows `.exe` build on every GitHub Actions run
 
 ## Requirements
 
@@ -58,13 +59,35 @@ Search within a channel:
 python main.py search "cartoon" --channel-id CHANNEL_ID
 ```
 
+## Windows Executable
+
+Every push and pull request to `main` triggers a GitHub Actions job that builds a standalone Windows executable using **PyInstaller**.
+
+After a successful workflow run:
+
+1. Open the repository on GitHub → **Actions**
+2. Select the latest workflow run
+3. Download the artifact named **Watch-Cartoons-Windows**
+4. Extract `Watch-Cartoons.exe`
+
+You can also build the executable locally on Windows:
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --name Watch-Cartoons --console main.py
+```
+
+The resulting binary will be located at `dist/Watch-Cartoons.exe`.
+
+> **Note:** The executable still requires a valid `YOUTUBE_API_KEY` environment variable (or a `.env` file in the same directory).
+
 ## Project Structure
 
 ```
 .
 ├── .github/
 │   └── workflows/
-│       └── build.yml      # CI build & validation
+│       └── build.yml      # CI validation + Windows .exe build
 ├── main.py                # Main CLI entry point
 ├── youtube_client.py      # YouTube Data API wrapper
 ├── requirements.txt
@@ -80,6 +103,7 @@ The repository includes a GitHub Actions workflow (`.github/workflows/build.yml`
 - Installs dependencies
 - Runs linting (ruff)
 - Performs a basic syntax and import check
+- Builds a Windows `.exe` with PyInstaller and uploads it as an artifact
 
 ## License
 
